@@ -15,6 +15,13 @@ function getInfo() {
     
         httpReq.open('GET', `http://localhost:3030/jsonstore/bus/businfo/${stopId.value}`, true);
         httpReq.getResponseHeader('Content-type', 'application/json');
+
+        // Validate if the received response is JSON
+        try {
+            JSON.parse(httpReq.responseText);
+        } catch (e) {
+            stopName.textContent = 'Error';
+        }
     
         httpReq.onload = () => {
             if (!httpReq.responseText) {
@@ -27,7 +34,15 @@ function getInfo() {
 
         httpReq.send();
     } else {
-        console.warn('Invalid / empty ID');
+        stopName.textContent = 'Error';
+    }
+
+    function validateJSON(str) {
+        try {
+            JSON.parse(str)
+        } catch (e) {
+            return false;
+        }
     }
 
     function generateDOM() {
