@@ -1,26 +1,42 @@
 function solve() {
 
-    let response;
+    const info = document.querySelector('div#info span.info');
+    const departBtn = document.getElementById('depart');
+    const arriveBtn = document.getElementById('arrive');
 
-    function depart() {
-        const request = new XMLHttpRequest();
+    let nextStop = 'depot';
+    let stopName = '';
 
-        if (request) {
-            request.open('GET', 'http://localhost:3030/jsonstore/bus/schedule/1567', true); // Initial, first id in the JSON file
+    async function depart() {
+        try {
+            const response = await fetch(`http://localhost:3030/jsonstore/bus/schedule/${nextStop}`);
 
-            request.onload = () => {
-                response = request.responseText;
-                console.log(request.responseText);
+            if (!response.ok) {
+                let error = new Error();
+                error.status = response.status;
+                error.statusText = response.statusText;
+
+                throw error;
             }
 
-            request.send();
-        }
+            const data = await response.json();
+            stopName = data.name;
+            nextStop = data.next;
 
-        console.log(response);
+            arriveBtn.removeAttribute('disabled');
+            departBtn.setAttribute('disabled', 'true');
+
+            info.textContent = `Next stop ${stopName}`;
+            
+        } catch (err) {
+            console.log(err);
+        }
     }
 
     function arrive() {
-        console.log('Arrive TODO...');
+        arriveBtn.setAttribute('disabled', 'true');
+        departBtn.removeAttribute('disabled');
+        info.textContent = `Arriving at ${stopName}`;
     }
 
     return {
