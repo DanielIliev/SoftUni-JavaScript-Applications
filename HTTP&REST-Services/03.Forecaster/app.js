@@ -1,164 +1,115 @@
 function attachEvents() {
-    // Addresses
+    // URLs
     // http://localhost:3030/jsonstore/forecaster/locations
     // http://localhost:3030/jsonstore/forecaster/today/:code
     // http://localhost:3030/jsonstore/forecaster/upcoming/:code
     // ---------------------------------------------------------------------
 
-    const locationId = document.getElementById('location');
+    const locationInput = document.getElementById('location');
     const submitBtn = document.getElementById('submit');
     const forecast = document.getElementById('forecast');
     const current = document.getElementById('current');
-    const upcoming = document.getElementById('upcoming');
-    const baseUrl = 'http://localhost:3030/jsonstore/forecaster/';
+    const upcomingForecast = document.getElementById('upcoming');
+    const weatherSymbols = {
+        'Sunny': '&#x2600;',
+        'Partly sunny': '&#x26C5;',
+        'Overcast': '&#x2601;',
+        'Rain': '&#x2614;',
+    }
 
-    let locationName = '';
-    let todayForecast = {};
-    let threeDaysForecast = {};
+    submitBtn.addEventListener('click', () => fetchForecastData());
 
-    submitBtn.addEventListener('click', () => fetchForecastData(locationId.value));
+    function fetchForecastData() {
+        fetch('http://localhost:3030/jsonstore/forecaster/locations')
+            .then(response => response.json())
+            .then(data => {
+                const cityIndex = data.findIndex((el) => el.name === locationInput.value);
 
-    async function fetchForecastData(locId) {
-        try {
-            const response = await fetch('http://localhost:3030/jsonstore/forecaster/locations');
+                forecast.style.display = 'block';
 
-            if (!response.ok) {
-                let error = new Error();
-                error.status = response.status;
-                error.statusText = response.statusText;
-                throw error;
-            }
-
-            const data = await response.json();
-
-            for (const location of data) {
-                if (location.code === locId) {
-                    locationName = location.name;
-                    todayForecast = await fetchTodayForecast(locId);
-                    threeDaysForecast = await fetchThreeDaysForecast(locId);
-                    generateDOM(todayForecast, threeDaysForecast);
-                    locationName = '';
-                    todayForecast = {};
-                    threeDaysForecast = {};
+                if (cityIndex === -1) {
+                    throw new Error();
                 }
-            }
 
-        } catch (error) {
-            forecast.style.display = 'block';
-            forecast.textContent = 'Error';
-            console.warn('Error');
-            console.log(error);
-        }
-    }
+                let cityCode = data[cityIndex].code;
 
-    async function fetchTodayForecast(locId) {
-        try {
-            const response = await fetch(baseUrl + `today/${locId}`);
+                // Current weather
+                fetch(`http://localhost:3030/jsonstore/forecaster/today/${cityCode}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const forecasts = document.createElement('div');
+                        forecasts.className = 'forecasts';
 
-            if (!response.ok) {
-                let error = new Error();
-                error.status = response.status;
-                error.statusText = response.statusText;
+                        // Condition info span
+                        let condition = document.createElement('span');
+                        condition.className = 'condition';
 
-                throw error;
-            }
+                        // Condition symbol span
+                        const symbolSpan = document.createElement('span');
+                        symbolSpan.className = 'condition symbol';
+                        symbolSpan.innerHTML = weatherSymbols[data.forecast.condition];
+                        condition.appendChild(symbolSpan);
 
-            const data = await response.json();
+                        // Span 1
+                        const span1 = document.createElement('span');
+                        span1.className = 'forecast-data';
+                        span1.textContent = data.name;
+                        condition.appendChild(span1);
 
-            return data;
+                        // Span 1
+                        const span2 = document.createElement('span');
+                        span2.className = 'forecast-data';
+                        span2.innerHTML = `${data.forecast.low}&#176;/${data.forecast.high}&#176;`;
+                        condition.appendChild(span2);
 
-        } catch (error) {
-            forecast.style.display = 'block';
-            forecast.textContent = 'Error';
-            console.warn('Error');
-            console.log(error);
-        }
-    }
+                        // Span 1
+                        const span3 = document.createElement('span');
+                        span3.className = 'forecast-data';
+                        span3.textContent = data.forecast.condition;
+                        condition.appendChild(span3);
 
-    async function fetchThreeDaysForecast(locId) {
-        try {
-            const response = await fetch(baseUrl + `upcoming/${locId}`);
+                        forecasts.appendChild(condition);
+                        current.appendChild(forecasts);
+                    });
 
-            if (!response.ok) {
-                let error = new Error();
-                error.status = response.status;
-                error.statusText = response.statusText;
+                // Upcoming weather
+                fetch(`http://localhost:3030/jsonstore/forecaster/upcoming/${cityCode}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Main div
+                        const fcInfo = document.createElement('div');
+                        fcInfo.className = 'forecast-info';
 
-                throw error;
-            }
+                        // Each day from the array spans
+                        data.forecast.forEach((el) => {
+                            // Main span
+                            const upcoming = document.createElement('span');
+                            upcoming.className = 'upcoming';
 
-            const data = await response.json();
+                            // Symbol span
+                            let symbol = document.createElement('span');
+                            symbol.className = 'symbol';
+                            symbol.innerHTML = weatherSymbols[el.condition];
+                            upcoming.appendChild(symbol);
 
-            return data;
+                            // Forecast info span 1
+                            let span1 = document.createElement('span');
+                            span1.className = 'forecast-data';
+                            span1.innerHTML = `${el.low}&#176;/${el.high}&#176;`;
+                            upcoming.appendChild(span1);
 
-        } catch (error) {
-            forecast.style.display = 'block';
-            forecast.textContent = 'Error';
-            console.warn('Error');
-            console.log(error);
-        }
-    }
+                            // Forecast info span 1
+                            let span2 = document.createElement('span');
+                            span2.className = 'forecast-data';
+                            span2.innerHTML = `${el.condition}`;
+                            upcoming.appendChild(span2);
 
+                            fcInfo.appendChild(upcoming);
+                            upcomingForecast.appendChild(fcInfo);
+                        });
+                    });
 
-    function generateDOM(todayForecast, threeDaysForecast) {
-        forecast.style.display = 'block';
-        // Today
-        const today = createElement('div', '', current, ['forecasts']);
-        createElement('span', `${fetchConditionSymbol(todayForecast.forecast.condition)}`, today, ['condition', 'symbol']);
-        const todayData = createElement('span', '', today, ['condition']);
-        createElement('span', `${todayForecast.name}`, todayData, ['forecast-data']);
-        createElement('span', `${todayForecast.forecast.high}&#176;/${todayForecast.forecast.low}&#176;`, todayData, ['forecast-data']);
-        createElement('span', `${todayForecast.forecast.condition}`, todayData, ['forecast-data']);
-
-        // Three days
-        const threeDays = createElement('div', '', upcoming, ['forecast-info']);
-
-        for (const elem of threeDaysForecast.forecast) {
-            const dayBlock = createElement('span', '', threeDays, ['upcoming']);
-
-            createElement('span', `${fetchConditionSymbol(elem.condition)}`, dayBlock, ['symbol']);
-            createElement('span', `${elem.high}&#176;/${elem.low}&#176;`, dayBlock, ['forecast-data']);
-            createElement('span', `${elem.condition}`, dayBlock, ['forecast-data']);
-        }
-    }
-
-    function createElement(type, content, parent, classNamesArray) {
-        const element = document.createElement(type);
-
-        element.innerHTML = content;
-
-        if (classNamesArray) {
-            for (const name of classNamesArray) {
-                element.classList.add(name);
-            }
-        }
-
-        if (parent) parent.appendChild(element);
-
-        return element;
-    }
-
-    function fetchConditionSymbol(condition) {
-        let symbol = '';
-        switch (condition) {
-            case 'Sunny':
-                symbol = '&#x2600;';
-                break;
-            case 'Partly sunny':
-                symbol = '&#x26C5;';
-                break;
-            case 'Overcast':
-                symbol = '&#x2601;';
-                break;
-            case 'Rain':
-                symbol = '&#x2614;';
-                break;
-
-            default:
-                break;
-        }
-
-        return symbol;
+            }).catch(() => { forecast.textContent = 'Error'; });
     }
 }
 
