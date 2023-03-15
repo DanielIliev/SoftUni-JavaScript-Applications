@@ -1,48 +1,64 @@
 async function solution() {
+    // URLs
+    // General: http://localhost:3030/jsonstore/advanced/articles/list
+    // Details: http://localhost:3030/jsonstore/advanced/articles/details/:id
     const articlesListUrl = 'http://localhost:3030/jsonstore/advanced/articles/list';
+    const articleDetailsBaseUrl = 'http://localhost:3030/jsonstore/advanced/articles/details/';
     const main = document.getElementById('main');
-    let articleTitles = {};
 
-    try {
-        const articlesResponse = await fetch(articlesListUrl);
+    fetch(articlesListUrl)
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(element => {
+                // Main div
+                const accordion = document.createElement('div');
+                accordion.className = 'accordion';
 
-        if (!articlesResponse.ok) {
-            let error = new Error();
-            error.status = articlesResponse.status;
-            error.statusText = articlesResponse.statusText;
+                // Accordion head
+                const accHead = document.createElement('div');
+                accHead.className = 'head';
 
-            throw error;
-        }
+                // Head elements
+                let span = document.createElement('span');
+                span.textContent = element.title;
+                accHead.appendChild(span);
 
-        const data = await articlesResponse.json();
-        articleTitles = data;
+                let button = document.createElement('button');
+                button.className = 'button';
+                button.setAttribute('id', `${element._id}`);
+                button.textContent = 'More';
+                accHead.appendChild(button);
 
-        generateDOM();
+                // Extra content
+                const accExtra = document.createElement('div');
+                accExtra.className = 'extra';
+                let extraParagraph = document.createElement('p');
+                accExtra.appendChild(extraParagraph);
 
-    } catch (error) {
-        console.log(error);
-    }
+                accordion.appendChild(accHead);
+                accordion.appendChild(accExtra);
+                main.appendChild(accordion);
 
-    function generateDOM() {
-        Object.entries(articleTitles).forEach(element => {
-            const data = element[1];
+                // Button handler
+                button.addEventListener('click', () => {
+                    let currentState = window.getComputedStyle(accExtra).display;
 
-            main.innerHTML += `<div class="accordion">
-                <div class="head">
-                    <span>${data.title}</span>
-                    <button class="button" id="${data._id}">More</button>
-                </div>
-                <div class="extra ${data._id}">
-                    <p></p>
-                </div>
-            </div>`;
+                    if (currentState === 'none') {
+                        accExtra.style.display = 'block';
+                        button.textContent = 'Less';
+                    } else if (currentState === 'block') {
+                        accExtra.style.display = 'none';
+                        button.textContent = 'More';
+                    }
+                });
 
-            console.log(data._id);
+                fetch(articleDetailsBaseUrl + button.getAttribute('id'))
+                    .then(response => response.json())
+                    .then(data => {
+                        extraParagraph.textContent = data.content;
+                    });
 
-            document.getElementById(`${data._id}`).addEventListener('click', () => {
-                console.log('hello');
-            })
+            });
         });
-    }
 }
 solution();
