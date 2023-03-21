@@ -3,6 +3,8 @@ function attachEvents() {
     // For GET & POST -> http://localhost:3030/jsonstore/phonebook
     // For DELETE -> http://localhost:3030/jsonstore/phonebook/:key
     const phonebookList = document.getElementById('phonebook');
+    const personField = document.getElementById('person');
+    const phoneField = document.getElementById('phone');
 
     document.getElementById('btnLoad').addEventListener('click', () => {
         fetch('http://localhost:3030/jsonstore/phonebook')
@@ -25,7 +27,7 @@ function attachEvents() {
                                 'method': 'DELETE',
                                 'Content-Type': 'application/json'
                             };
-                            
+
                             fetch(`http://localhost:3030/jsonstore/phonebook/${contactId}`, options);
 
                             e.target.parentNode.remove();
@@ -35,20 +37,21 @@ function attachEvents() {
                         phonebookList.appendChild(contactItem);
                     }
                 }
-                // Object.values(data).forEach((contact) => {
-                //     console.log(contact);
-                //     const contactItem = document.createElement('li');
-
-                //     contactItem.textContent = `${contact.person}: ${contact.phone}`;
-
-                //     const deleteBtn = document.createElement('button');
-                //     deleteBtn.textContent = 'Delete';
-                //     deleteBtn.setAttribute('id', `${contact._id}`);
-
-                //     contactItem.appendChild(deleteBtn);
-                //     phonebookList.appendChild(contactItem);
-                // });
             });
+    });
+
+    document.getElementById('btnCreate').addEventListener('click', () => {
+        if (personField.value && phoneField.value) {
+            const contactInfo = { 'person': personField.value, 'phone': phoneField.value };
+
+            const options = {
+                'method': 'POST',
+                'Content-Type': 'application/json',
+                'body': JSON.stringify(contactInfo)
+            }
+
+            fetch('http://localhost:3030/jsonstore/phonebook', options);
+        }
     });
 }
 
