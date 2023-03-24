@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css?family=Parisienne&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@600;900&display=swap" rel="stylesheet">
     <script src="https://kit.fontawesome.com/3cd69e2433.js" crossorigin="anonymous"></script>
+    <script src="./src/app.js" type="module"></script>
     <title>SoftUni Forum</title>
 </head>
 
@@ -25,7 +26,7 @@
         <nav>
             <ul>
                 <li>
-                    <a href="#">Home</a>
+                    <a href="javascript:void(0)">Home</a>
                 </li>
             </ul>
         </nav>
@@ -38,7 +39,7 @@
                 <div class="header-background">
                     <span>New Topic</span>
                 </div>
-                <form>
+                <form id="create-post">
                     <div class="new-topic-title">
                         <label for="topicName">Title <span class="red">*</span></label>
                         <input type="text" name="topicName" id="topicName">
@@ -63,9 +64,10 @@
 
                 <!-- topic component  -->
                 <div class="topic-container">
-                    
+
                 </div>
-                
+            </div>
+
 
         </main>
 
